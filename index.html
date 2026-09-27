@@ -86,7 +86,11 @@ pre.solve{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;background:v
 .tool{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:16px;width:62px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;font-size:11px;font-weight:700;color:var(--muted2)}
 .tool svg{width:22px;height:22px;color:var(--ink)}
 .tool:disabled{opacity:.35;cursor:default}
-.tool b{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:800 11px/20px system-ui;padding:0 5px}
+.coin{width:.85em;height:.85em;vertical-align:-.08em;margin-left:2px}
+.tool.nudge{animation:nudge 1s ease-in-out infinite;border-color:var(--ink)}
+@keyframes nudge{50%{transform:scale(1.08)}}
+.tool b .coin{width:9px;height:9px;color:inherit;vertical-align:-1px;margin-left:1px}
+.tool b{position:absolute;white-space:nowrap;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:800 11px/20px system-ui;padding:0 5px}
 /* A ready bottle is poured onto the picture: its parts pulse until then. */
 .frame svg{cursor:pointer}
 .reg.want .base{animation:blink 1s ease-in-out infinite}
@@ -151,24 +155,24 @@ pre.solve{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;background:v
 </section>
 <div class="overlay" id="ov" hidden><div class="sheet" id="sheet"></div></div>
 
-<script src="engine/core.js?v=1a99dd9"></script>
-<script src="engine/i18n.js?v=1a99dd9"></script>
-<script src="engine/sound.js?v=1a99dd9"></script>
-<script src="levels.js?v=1a99dd9"></script>
-<script src="solver.js?v=1a99dd9"></script>
+<script src="engine/core.js?v=4d0c735"></script>
+<script src="engine/i18n.js?v=4d0c735"></script>
+<script src="engine/sound.js?v=4d0c735"></script>
+<script src="levels.js?v=4d0c735"></script>
+<script src="solver.js?v=4d0c735"></script>
 <script>
 (function(){
 const G=window.GAME, CAP=G.cap, L=G.levels, {t}=I18N, $=id=>document.getElementById(id);
 I18N.add(G.strings);
 I18N.add({
-fr:{'{name} is ready: pour it on the picture':'{name} est prêt : versez-le sur l’image','Tap another bottle to pour into it':'Touchez une autre bouteille pour verser dedans','Tap a part of the picture':'Touchez une partie de l’image','That part is already painted':'Cette partie est déjà peinte','This part needs {name}: mix a full bottle of it':'Il faut du {name} ici : remplissez-en une bouteille','This part needs {name}. Your bottle is {other}':'Il faut du {name} ici. Votre bouteille est {other}','Pour bottle {a} on the picture':'Versez la bouteille {a} sur l’image','Prototype · mix the colors, then paint the picture':'Prototype · mélangez les couleurs, puis peignez l’image','Moves':'Coups','Par':'Par','Undo':'Annuler','Extract':'Extraire','Drain':'Vider','Hint':'Indice','Restart':'Rejouer',
+fr:{'Select a mixed bottle, then tap Extract':'Choisissez une bouteille mélangée, puis touchez Extraire','This bottle holds only one paint':'Cette bouteille ne contient qu’une peinture','Not enough coins: Extract costs {p}':'Pas assez de pièces : Extraire coûte {p}','Extract bought. {n} coins left':'Extraction achetée. Il reste {n} pièces','No empty bottle: that paint is poured away.':'Pas de bouteille vide : cette peinture sera jetée.','You need an Extract':'Il vous faut une extraction','Mixed paint can’t be separated by pouring. Buy an Extract to pull a paint back out, or undo.':'On ne sépare pas une peinture mélangée en versant. Achetez une extraction pour en retirer une couleur, ou annulez.','Buy Extract':'Acheter','No way to finish from here':'Impossible de finir à partir d’ici','These mixes can’t make the colors that are left, even with Extract. Undo a few moves or start over.':'Ces mélanges ne peuvent plus donner les couleurs restantes, même avec Extraire. Annulez quelques coups ou recommencez.','These mixes can’t make the colors that are left, and mixed paint can’t be separated here. Undo a few moves or start over.':'Ces mélanges ne peuvent plus donner les couleurs restantes, et ici la peinture mélangée ne se sépare pas. Annulez quelques coups ou recommencez.','Still no way to finish: undo again':'Toujours impossible de finir : annulez encore','Too many ways to go from here: try a pour first':'Trop de possibilités d’ici : versez d’abord','{name} is ready: pour it on the picture':'{name} est prêt : versez-le sur l’image','Tap another bottle to pour into it':'Touchez une autre bouteille pour verser dedans','Tap a part of the picture':'Touchez une partie de l’image','That part is already painted':'Cette partie est déjà peinte','This part needs {name}: mix a full bottle of it':'Il faut du {name} ici : remplissez-en une bouteille','This part needs {name}. Your bottle is {other}':'Il faut du {name} ici. Votre bouteille est {other}','Pour bottle {a} on the picture':'Versez la bouteille {a} sur l’image','Prototype · mix the colors, then paint the picture':'Prototype · mélangez les couleurs, puis peignez l’image','Moves':'Coups','Par':'Par','Undo':'Annuler','Extract':'Extraire','Drain':'Vider','Hint':'Indice','Restart':'Rejouer',
 'Select a bottle':'Choisissez une bouteille','Tap another bottle to pour, or a target color':'Touchez une autre bouteille pour verser, ou une couleur cible','That bottle is full':'Cette bouteille est pleine',
 'Fill the bottle to the top first':'Remplissez d’abord la bouteille jusqu’en haut','Not quite: {pct}% match':'Pas tout à fait : {pct} %','{name} is ready: tap it to deliver':'{name} est prêt : touchez-le pour livrer',
 'Extract which paint?':'Extraire quelle peinture ?','It goes into an empty bottle.':'Elle va dans une bouteille vide.','Needs an empty bottle.':'Il faut une bouteille vide.','Cancel':'Annuler',
 'All colors mixed!':'Toutes les couleurs sont prêtes !','Tap the picture to paint it':'Touchez l’image pour la peindre','Painted!':'Peint !','{m} moves · par {p}':'{m} coups · par {p}','Next':'Suivant','Home':'Accueil','Got it':'Compris',
 'No solution from here: try Undo':'Plus de solution d’ici : essayez Annuler','Pour {a} into {b}':'Versez {a} dans {b}','Empty bottle {a}':'Videz la bouteille {a}','Extract {paint} from bottle {a}':'Extrayez {paint} de la bouteille {a}','Deliver bottle {a}':'Livrez la bouteille {a}',
 'White':'Blanc','Cyan':'Cyan','Magenta':'Magenta','Yellow':'Jaune','Black':'Noir','Play':'Jouer'},
-ru:{'{name} is ready: pour it on the picture':'{name} готов: вылейте его на картинку','Tap another bottle to pour into it':'Нажмите другую бутылку, чтобы перелить','Tap a part of the picture':'Нажмите на часть картинки','That part is already painted':'Эта часть уже раскрашена','This part needs {name}: mix a full bottle of it':'Здесь нужен цвет «{name}»: наполните им бутылку','This part needs {name}. Your bottle is {other}':'Здесь нужен цвет «{name}». У вас в бутылке «{other}»','Pour bottle {a} on the picture':'Вылейте бутылку {a} на картинку','Prototype · mix the colors, then paint the picture':'Прототип · смешайте цвета и раскрасьте картинку','Moves':'Ходы','Par':'Норма','Undo':'Отменить','Extract':'Извлечь','Drain':'Вылить','Hint':'Подсказка','Restart':'Заново',
+ru:{'Select a mixed bottle, then tap Extract':'Выберите смешанную бутылку и нажмите «Извлечь»','This bottle holds only one paint':'В этой бутылке только одна краска','Not enough coins: Extract costs {p}':'Не хватает монет: «Извлечь» стоит {p}','Extract bought. {n} coins left':'Куплено. Осталось монет: {n}','No empty bottle: that paint is poured away.':'Пустой бутылки нет: эта краска выльется.','You need an Extract':'Нужно извлечение','Mixed paint can’t be separated by pouring. Buy an Extract to pull a paint back out, or undo.':'Смешанную краску не разделить переливанием. Купите извлечение, чтобы вернуть одну краску, или отмените ход.','Buy Extract':'Купить','No way to finish from here':'Отсюда уровень не пройти','These mixes can’t make the colors that are left, even with Extract. Undo a few moves or start over.':'Из этих смесей уже не получить оставшиеся цвета, даже с «Извлечь». Отмените несколько ходов или начните заново.','These mixes can’t make the colors that are left, and mixed paint can’t be separated here. Undo a few moves or start over.':'Из этих смесей уже не получить оставшиеся цвета, а смешанную краску здесь не разделить. Отмените несколько ходов или начните заново.','Still no way to finish: undo again':'Всё ещё не пройти: отмените ещё ход','Too many ways to go from here: try a pour first':'Слишком много вариантов: сначала перелейте','{name} is ready: pour it on the picture':'{name} готов: вылейте его на картинку','Tap another bottle to pour into it':'Нажмите другую бутылку, чтобы перелить','Tap a part of the picture':'Нажмите на часть картинки','That part is already painted':'Эта часть уже раскрашена','This part needs {name}: mix a full bottle of it':'Здесь нужен цвет «{name}»: наполните им бутылку','This part needs {name}. Your bottle is {other}':'Здесь нужен цвет «{name}». У вас в бутылке «{other}»','Pour bottle {a} on the picture':'Вылейте бутылку {a} на картинку','Prototype · mix the colors, then paint the picture':'Прототип · смешайте цвета и раскрасьте картинку','Moves':'Ходы','Par':'Норма','Undo':'Отменить','Extract':'Извлечь','Drain':'Вылить','Hint':'Подсказка','Restart':'Заново',
 'Select a bottle':'Выберите бутылку','Tap another bottle to pour, or a target color':'Нажмите другую бутылку, чтобы перелить, или целевой цвет','That bottle is full':'Эта бутылка полная',
 'Fill the bottle to the top first':'Сначала заполните бутылку доверху','Not quite: {pct}% match':'Почти: совпадение {pct}%','{name} is ready: tap it to deliver':'{name} готов: нажмите, чтобы сдать',
 'Extract which paint?':'Какую краску извлечь?','It goes into an empty bottle.':'Она перельётся в пустую бутылку.','Needs an empty bottle.':'Нужна пустая бутылка.','Cancel':'Отмена',
@@ -181,7 +185,10 @@ const hexOf=r=>CF.hex(CF.mix(r));
 const PAPER=CF.BLANK, INKC=CF.INK;
 
 // ---------- Save ----------
-let save={best:{},tip:{}};
+// Economy: Extract is free a set number of times per level (levels.js `extract`), then costs coins.
+const START_COINS=60, EXTRACT_PRICE=30, COINS_PER_STAR=5, FIRST_CLEAR_BONUS=20, REPLAY_BONUS=5;
+const COIN='<svg class="coin" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>';
+let save={best:{},tip:{},coins:START_COINS};
 try{Object.assign(save,JSON.parse(localStorage.getItem(G.saveKey)||'{}'));}catch(e){}
 const store=()=>{try{localStorage.setItem(G.saveKey,JSON.stringify(save));}catch(e){}};
 
@@ -204,7 +211,7 @@ function pictureSVG(lv,colored,uid){
 function stars(n){return [1,2,3].map(i=>i<=n?'★':'<span class="off">★</span>').join('');}
 function goHome(){
   $('game').hidden=true; $('home').hidden=false; closeOv();
-  $('homeSub').textContent=t('Prototype · mix the colors, then paint the picture');
+  $('homeSub').innerHTML=t('Prototype · mix the colors, then paint the picture')+` · <b>${save.coins}${COIN}</b>`;
   const next=L.findIndex(l=>!save.best[l.id]);
   $('grid').innerHTML=L.map((l,i)=>`<button class="card${i===next?' next':''}" data-i="${i}">${pictureSVG(l,!!save.best[l.id])}<b><span>${i+1}. ${t(l.title)}</span><span class="st">${stars(save.best[l.id]||0)}</span></b></button>`).join('');
   $('grid').querySelectorAll('.card').forEach(c=>c.onclick=()=>start(+c.dataset.i));
@@ -226,7 +233,6 @@ function start(i){
   $('targets').classList.toggle('many',lv.targets.length>2);
   // Bottles taller when there are few of them; 7+ wrap into two rows.
   const n=lv.bottles.length; $('shelf').style.setProperty('--tubeH',(n>6?120:168)+'px');
-  $('tExtract').hidden=!lv.extract;
   $('shelf').innerHTML=S.b.map((b,bi)=>`<div class="slot"><button class="bottle" data-i="${bi}"><span class="ok"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div class="tube"><div class="liq"></div><div class="marks"></div></div><div class="comp"></div></button></div>`).join('');
   $('shelf').querySelectorAll('.bottle').forEach(b=>b.onclick=()=>tapBottle(+b.dataset.i));
   render(); msg(t('Select a bottle'));
@@ -253,7 +259,7 @@ function render(){
   $('moves').innerHTML=`${t('Moves')} ${S.moves} <small>· ${t('Par')} ${S.lv.par}</small>`;
   const sel=S.sel>=0;
   $('tUndo').disabled=!S.hist.length;
-  $('exN').textContent=S.ex; $('tExtract').disabled=!(sel&&S.ex>0&&CB.parts(S.b[S.sel]).length>1);
+  $('exN').innerHTML=S.ex>0?S.ex:EXTRACT_PRICE+COIN;
   $('tDrain').disabled=!sel;
   document.querySelectorAll('.bottle.hint').forEach(e=>e.classList.remove('hint'));
   const ready=sb?S.lv.targets.findIndex((tg,k)=>!S.done[k]&&CB.fits(sb,tg.recipe,CAP)):-1;
@@ -303,6 +309,38 @@ function afterMove(focus){
   const ti=focus>=0?S.lv.targets.findIndex((tg,k)=>!S.done[k]&&CB.fits(S.b[focus],tg.recipe,CAP)):-1;
   // A full bottle that matches an open target gets picked up, ready to pour on the picture.
   if(ti>=0) select(focus); else msg(t('Select a bottle'));
+  checkStuck();
+}
+// The rest of the level as a solver problem: current bottles, targets not poured yet, Extracts left.
+function openLevel(){return {bottles:S.b,targets:S.lv.targets.filter((tg,ti)=>!S.done[ti]),extract:S.ex};}
+// After every move: if no sequence of moves can finish the level any more, say so right away
+// (paint can't be un-mixed without Extract). After an Undo that didn't get out of it, nudge Undo again.
+function checkStuck(afterUndo){
+  const at=S.moves+':'+S.hist.length;
+  setTimeout(()=>{
+    if(!S||S.phase!=='mix'||S.moves+':'+S.hist.length!==at) return;
+    const ok=CB.canFinish(openLevel(),CAP);
+    $('tUndo').classList.toggle('nudge',ok===false);
+    if(ok!==false) return;
+    // Would bought Extracts get the player out? (up to what they can afford, at most 3)
+    const canBuy=Math.min(3,Math.floor(save.coins/EXTRACT_PRICE));
+    const rescue=canBuy>0&&CB.canFinish({...openLevel(),extract:S.ex+canBuy},CAP)!==false;
+    if(afterUndo&&!rescue){msg(t('Still no way to finish: undo again'));return;}
+    sfx('fail'); buzz([40,60,40]); showStuck(rescue);
+  },60);
+}
+function showStuck(rescue){
+  if(rescue){
+    openOv(`<h3>${t('You need an Extract')}</h3><p>${t('Mixed paint can’t be separated by pouring. Buy an Extract to pull a paint back out, or undo.')}</p>
+      <div class="row"><button class="btn ghost" id="stUndo">${t('Undo')}</button><button class="btn" id="stBuy">${t('Buy Extract')} · ${EXTRACT_PRICE}${COIN}</button></div>`,true);
+    $('stUndo').onclick=()=>{closeOv();undo();};
+    $('stBuy').onclick=()=>{closeOv(); if(buyExtract()) msg(t('Select a mixed bottle, then tap Extract'));};
+    return;
+  }
+  openOv(`<h3>${t('No way to finish from here')}</h3><p>${t(S.ex?'These mixes can’t make the colors that are left, even with Extract. Undo a few moves or start over.':'These mixes can’t make the colors that are left, and mixed paint can’t be separated here. Undo a few moves or start over.')}</p>
+    <div class="row"><button class="btn ghost" id="stRestart">${t('Restart')}</button><button class="btn" id="stUndo">${t('Undo')}</button></div>`,true);
+  $('stUndo').onclick=()=>{closeOv();undo();};
+  $('stRestart').onclick=()=>start(S.i);
 }
 function tapTarget(ti){
   if(busy||S.done[ti]) return;
@@ -359,7 +397,7 @@ function pourOnPicture(i,ti,x,y){
         const lq=A.querySelector('.liq'); lq.style.transition='none'; render(); void lq.offsetWidth; lq.style.transition='';
         f.remove(); A.style.visibility=''; busy=false;
         sfx('restore',S.done.filter(Boolean).length-1); buzz([20,40,20]);
-        if(S.done.every(Boolean)) setTimeout(finish,350); else msg(t('Select a bottle'));
+        if(S.done.every(Boolean)) setTimeout(finish,350); else {msg(t('Select a bottle')); checkStuck();}
       },380);
     },560);
   },380);
@@ -369,31 +407,45 @@ function drain(){
   const i=S.sel, A=bEl(i); S.hist.push(snap()); S.moves++; busy=true;
   A.style.transform='translateY(10px) rotate(160deg)'; A.classList.add('pouring');
   setTimeout(()=>{S.b[i]={}; S.sel=-1; drawBottle(i); sfx('pour');},250);
-  setTimeout(()=>{A.style.transform=''; setTimeout(()=>{A.classList.remove('pouring');busy=false;render();msg(t('Select a bottle'));},330);},650);
+  setTimeout(()=>{A.style.transform=''; setTimeout(()=>{A.classList.remove('pouring');busy=false;render();msg(t('Select a bottle'));checkStuck();},330);},650);
+}
+function tapExtract(){
+  if(busy) return;
+  if(S.sel<0){msg(t('Select a mixed bottle, then tap Extract'));return;}
+  if(CB.parts(S.b[S.sel]).length<2){msg(t('This bottle holds only one paint'));sfx('wrong');return;}
+  if(S.ex<1&&!buyExtract()) return;
+  openExtract();
+}
+// Buys one Extract for this attempt. Returns false when the player can't afford it.
+function buyExtract(){
+  if(save.coins<EXTRACT_PRICE){msg(t('Not enough coins: Extract costs {p}',{p:EXTRACT_PRICE}));sfx('wrong');return false;}
+  save.coins-=EXTRACT_PRICE; S.ex++; store(); render(); sfx('coin');
+  msg(t('Extract bought. {n} coins left',{n:save.coins})); return true;
 }
 function openExtract(){
   if(busy||S.sel<0||S.ex<1) return;
   const i=S.sel, b=S.b[i], e=S.b.findIndex(x=>CB.vol(x)<CB.EPS);
   const amt=v=>Math.round(v*10)/10;
-  openOv(`<h3>${t('Extract which paint?')}</h3><p>${e>=0?t('It goes into an empty bottle.'):t('Needs an empty bottle.')}</p>
-    <div class="pchips">${CB.parts(b).map(k=>`<button class="pchip" data-k="${k}"${e<0?' disabled':''}><i style="background:${CF.hex(CF.PMAP[k].rgb)}"></i>${t(CF.PMAP[k].name)} · ${amt(b[k])}</button>`).join('')}</div>
+  openOv(`<h3>${t('Extract which paint?')}</h3><p>${e>=0?t('It goes into an empty bottle.'):t('No empty bottle: that paint is poured away.')}</p>
+    <div class="pchips">${CB.parts(b).map(k=>`<button class="pchip" data-k="${k}"><i style="background:${CF.hex(CF.PMAP[k].rgb)}"></i>${t(CF.PMAP[k].name)} · ${amt(b[k])}</button>`).join('')}</div>
     <div class="row"><button class="btn ghost" id="exCancel">${t('Cancel')}</button></div>`);
   $('exCancel').onclick=closeOv;
   $('sheet').querySelectorAll('.pchip').forEach(c=>c.onclick=()=>{
     closeOv(); const k=c.dataset.k; S.hist.push(snap()); S.moves++; S.ex--;
-    const nb=CB.clone(b); S.b[e]={[k]:b[k]}; delete nb[k]; S.b[i]=nb; S.sel=-1;
-    [i,e].forEach(x=>{const el=bEl(x); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');});
-    sfx('undo'); buzz(20); afterMove(e);
+    const nb=CB.clone(b); if(e>=0) S.b[e]={[k]:b[k]}; delete nb[k]; S.b[i]=nb; S.sel=-1;
+    [i,e].filter(x=>x>=0).forEach(x=>{const el=bEl(x); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');});
+    sfx('undo'); buzz(20); afterMove(e>=0?e:i);
   });
 }
 function undo(){
   if(busy||!S.hist.length) return;
   const h=S.hist.pop(); S.b=h.b; S.done=h.done; S.ex=h.ex; S.moves=h.moves; S.sel=-1; render(); msg(t('Select a bottle')); sfx('undo');
+  checkStuck(true);
 }
 function hint(){
   if(busy) return;
-  const open=S.lv.targets.map((tg,ti)=>ti).filter(ti=>!S.done[ti]);
-  const r=CB.solve({bottles:S.b,targets:open.map(ti=>S.lv.targets[ti]),extract:S.ex},CAP,150000);
+  const r=CB.solve(openLevel(),CAP,150000);
+  if(r.capped){msg(t('Too many ways to go from here: try a pour first'));return;}
   if(r.moves<0||!r.path.length){msg(t('No solution from here: try Undo'));sfx('wrong');return;}
   const m=r.path[0]; select(-1); const n=x=>x+1;
   if(m[0]==='pour'){bEl(m[1]).classList.add('hint');bEl(m[2]).classList.add('hint');msg(t('Pour {a} into {b}',{a:n(m[1]),b:n(m[2])}));}
@@ -404,9 +456,10 @@ function hint(){
 
 function finish(){
   const par=S.lv.par, st=S.moves<=par?3:S.moves<=par+2?2:1;
-  S.phase='done'; msg(''); save.best[S.lv.id]=Math.max(save.best[S.lv.id]||0,st); store(); sfx('fanfare');
+  const earned=st*COINS_PER_STAR+(save.best[S.lv.id]?REPLAY_BONUS:FIRST_CLEAR_BONUS);
+  S.phase='done'; msg(''); save.best[S.lv.id]=Math.max(save.best[S.lv.id]||0,st); save.coins+=earned; store(); sfx('fanfare');
   const last=S.i>=L.length-1;
-  openOv(`<h3>${t('Painted!')}</h3><div class="stars">${stars(st)}</div><p>${t('{m} moves · par {p}',{m:S.moves,p:par})}</p>
+  openOv(`<h3>${t('Painted!')}</h3><div class="stars">${stars(st)}</div><p>${t('{m} moves · par {p}',{m:S.moves,p:par})} · +${earned}${COIN}</p>
     <div class="row"><button class="btn ghost" id="rHome">${t('Home')}</button>${last?'':`<button class="btn" id="rNext">${t('Next')}</button>`}</div>`);
   $('ov').classList.add('clear');
   $('rHome').onclick=goHome; if(!last) $('rNext').onclick=()=>start(S.i+1);
@@ -423,7 +476,7 @@ function showTip(){
 }
 
 $('back').onclick=goHome;
-$('tUndo').onclick=undo; $('tExtract').onclick=openExtract; $('tDrain').onclick=drain; $('tHint').onclick=hint; $('tRestart').onclick=()=>start(S.i);
+$('tUndo').onclick=undo; $('tExtract').onclick=tapExtract; $('tDrain').onclick=drain; $('tHint').onclick=hint; $('tRestart').onclick=()=>start(S.i);
 [['tUndo','Undo'],['tExtract','Extract'],['tDrain','Drain'],['tHint','Hint'],['tRestart','Restart']].forEach(([id,s])=>$(id).querySelector('span').textContent=t(s));
 goHome();
 

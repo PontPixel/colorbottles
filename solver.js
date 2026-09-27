@@ -16,7 +16,7 @@ const isFull=(b,cap)=>vol(b)>cap-EPS;
 const matchOf=(b,recipe)=>vol(b)>EPS?CF.matchPct(CF.mix(b),CF.mix(recipe)):0;
 const fits=(b,recipe,cap)=>isFull(b,cap)&&matchOf(b,recipe)>=MATCH;
 
-// Moves: ['pour',i,j] ['drain',i] ['extract',i,k] ['deliver',i,t]. Returns the fewest moves, deliveries excluded.
+// Moves: ['pour',i,j] ['drain',i] ['extract',i,k] ['deliver',i,t]. level.extract = Extracts available. Returns the fewest moves, deliveries excluded.
 function solve(level,cap,maxStates){
   maxStates=maxStates||400000;
   const T=level.targets.length, key=s=>s.b.map(b=>KEYS.map(k=>(b[k]||0).toFixed(3)).join(',')).sort().join('|')+'#'+s.done+'#'+s.ex;
@@ -34,6 +34,7 @@ function solve(level,cap,maxStates){
     if(total<open.length*cap-EPS) return true;
     return KEYS.some(k=>(have[k]||0)<open.reduce((a,ti)=>a+need[ti][k],0)*0.8-EPS);
   }
+  if(dead(start)) return {moves:-1,states:0};
   const seen=new Set([key(start)]); let q=[start],n=0;
   while(q.length){
     const nq=[];
@@ -47,7 +48,8 @@ function solve(level,cap,maxStates){
           const nb=s.b.slice();nb[i]=r.a;nb[j]=r.b;next.push({b:nb,done:s.done,ex:s.ex,path:s.path.concat([['pour',i,j]])});});
         {const nb=s.b.slice();nb[i]={};next.push({b:nb,done:s.done,ex:s.ex,path:s.path.concat([['drain',i]])});}
         const e=s.b.findIndex(c=>vol(c)<EPS);
-        if(s.ex>0&&e>=0&&parts(b).length>1) for(const k of parts(b)){const nb=s.b.slice(),a=clone(b);delete a[k];nb[i]=a;nb[e]={[k]:b[k]};next.push({b:nb,done:s.done,ex:s.ex-1,path:s.path.concat([['extract',i,k]])});}
+        // Extract: the paint goes into an empty bottle, or is poured away when there is none.
+        if(s.ex>0&&parts(b).length>1) for(const k of parts(b)){const nb=s.b.slice(),a=clone(b);delete a[k];nb[i]=a;if(e>=0)nb[e]={[k]:b[k]};next.push({b:nb,done:s.done,ex:s.ex-1,path:s.path.concat([['extract',i,k]])});}
       });
       for(const x of next){if(dead(x)) continue; const k=key(x); if(seen.has(k)) continue; seen.add(k); n++; nq.push(x); if(n>maxStates) return {moves:-1,states:n,capped:true};}
     }
@@ -55,5 +57,11 @@ function solve(level,cap,maxStates){
   }
   return {moves:-1,states:n};
 }
-return {KEYS,EPS,MATCH,vol,clone,parts,color,pour,isFull,matchOf,fits,solve};
+// Can the level still be finished? true / false, or null when the search budget ran out (treat as "maybe").
+// Cheap in the common dead end: wasted paint is caught by the up-front check before any search.
+function canFinish(level,cap,budget){
+  const r=solve(level,cap,budget||40000);
+  return r.moves>=0?true:r.capped?null:false;
+}
+return {KEYS,EPS,MATCH,vol,clone,parts,color,pour,isFull,matchOf,fits,solve,canFinish};
 })();
