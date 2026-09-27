@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>ColorBottles</title>
+<script>try{const th=localStorage.getItem('pontpixel-theme');if(th==='light'||th==='dark')document.documentElement.dataset.theme=th;}catch(e){}</script>
+<style>
+[hidden]{display:none!important}
+:root{color-scheme:light;
+  --wall:#f4f5f8;--panel:#fff;--ink:#1f2330;--muted:#80869a;--line:#e3e6ec;--on-ink:#fff;--muted2:#4a5061;--soft:#f1f2f5;--paper-ink:#23283a;
+  --glass:rgba(31,35,48,.05);--shadow:0 1px 2px rgba(20,24,40,.06),0 8px 24px rgba(20,24,40,.07)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --wall:#111318;--panel:#1b1e26;--ink:#eceef3;--muted:#8b90a3;--line:#2c303b;--on-ink:#15171d;--muted2:#b4b9c8;--soft:#262a35;
+  --glass:rgba(236,238,243,.05);--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --wall:#111318;--panel:#1b1e26;--ink:#eceef3;--muted:#8b90a3;--line:#2c303b;--on-ink:#15171d;--muted2:#b4b9c8;--soft:#262a35;
+  --glass:rgba(236,238,243,.05);--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;position:fixed;inset:0;background:var(--wall);color:var(--ink);font:500 15px/1.4 "Inter",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit}
+.scene{height:100%;display:flex;flex-direction:column;padding-top:max(12px,env(safe-area-inset-top))}
+.bar{flex:none;width:min(calc(100% - 32px),520px);margin:0 auto 10px;display:flex;align-items:center;gap:10px;min-height:40px}
+.bar h2{flex:1;margin:0;font:800 17px/1.1 "Inter",system-ui,sans-serif;letter-spacing:-.2px;text-align:center}
+.ib{appearance:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;cursor:pointer;flex:none}
+.ib svg{width:20px;height:20px}
+.pill{font:700 13px "Inter",system-ui,sans-serif;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill small{color:var(--muted);font-weight:600}
+.content{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 max(16px,calc((100% - 520px)/2)) max(14px,env(safe-area-inset-bottom))}
+
+/* Home */
+.brand{font:800 26px/1.1 "Inter",system-ui,sans-serif;letter-spacing:-.5px;margin:6px 0 2px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:8px 8px 10px;cursor:pointer;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+.card svg{width:100%;height:auto;display:block;border-radius:12px}
+.card b{font-weight:700;font-size:14px;padding:0 4px;display:flex;justify-content:space-between;gap:6px}
+.card .st{letter-spacing:1px;font-size:12px}
+.card .st .off{color:var(--line)}
+.card.next{outline:2px solid var(--ink);outline-offset:2px}
+pre.solve{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:16px}
+
+/* Play */
+.board{display:flex;flex-direction:column;gap:12px}
+.top{display:grid;grid-template-columns:1fr 92px;gap:12px;align-items:center;transition:all .5s}
+.frame{background:var(--panel);border-radius:18px;padding:6px;box-shadow:var(--shadow)}
+.frame svg{display:block;width:100%;height:auto;border-radius:13px}
+.targets{display:flex;flex-direction:column;gap:8px;align-items:center}
+.targets.many .tgt .chip{width:40px;height:40px}
+.targets.many{gap:4px}
+.tgt{appearance:none;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;width:92px}
+.tgt .chip{width:48px;height:48px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform .25s}
+.tgt .chip::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px dashed var(--line)}
+.tgt.done .chip::after{border:2.5px solid var(--ink)}
+.tgt.done .chip{transform:scale(.92)}
+.tgt .chip i{position:absolute;z-index:1;right:-7px;bottom:-7px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:none;place-items:center;font:800 12px/1 system-ui}
+.tgt.done .chip i{display:grid}
+.tgt.ready .chip{animation:bob .8s ease-in-out infinite}
+.tgt.ready .chip::after{border:2.5px solid var(--ink)}
+@keyframes bob{50%{transform:scale(1.1)}}
+.tgt span{font-size:11px;font-weight:600;color:var(--muted2);line-height:1.1;text-align:center}
+.tgt em{font-style:normal;font:700 11px "Inter",system-ui;font-variant-numeric:tabular-nums;color:var(--ink);min-height:13px}
+.msg{min-height:20px;text-align:center;font-size:13px;color:var(--muted2);font-weight:600}
+.shelf{position:relative;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 4px;padding-top:18px}
+.slot{width:56px;display:flex;justify-content:center}
+.bottle{appearance:none;border:0;background:none;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .3s cubic-bezier(.3,.7,.3,1);transform-origin:50% 0;position:relative;z-index:1}
+.bottle.sel{transform:translateY(-16px)}
+.bottle.pouring{z-index:5;transition:transform .32s ease-in-out}
+.tube{width:44px;height:var(--tubeH,138px);border:3px solid var(--ink);border-top-width:0;border-radius:6px 6px 22px 22px;background:var(--glass);position:relative;overflow:hidden}
+.tube::before{content:'';position:absolute;left:-6px;right:-6px;top:0;height:3px;background:var(--ink);z-index:3}
+.liq{position:absolute;left:0;right:0;bottom:0;height:0;transition:height .42s ease,background-color .42s ease}
+.marks{position:absolute;inset:0;z-index:2;background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),rgba(128,134,154,.35) calc(25% - 1px) 25%)}
+.liq::after{content:'';position:absolute;left:5px;top:6px;bottom:8px;width:5px;border-radius:3px;background:rgba(255,255,255,.28)}
+.comp{width:44px;height:6px;border-radius:3px;display:flex;overflow:hidden;background:var(--line)}
+.comp i{display:block;height:100%}
+.bottle .ok{position:absolute;top:-10px;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--on-ink);z-index:4;display:none;place-items:center}
+.bottle.fit .ok{display:grid}
+.bottle.hint .tube{animation:hint 1s ease-in-out infinite}
+@keyframes hint{50%{box-shadow:0 0 0 5px var(--ink)}}
+.bottle.shake{animation:shake .35s}
+@keyframes shake{25%{translate:-5px}75%{translate:5px}}
+.stream{position:absolute;width:6px;border-radius:3px;z-index:4;pointer-events:none;transform-origin:50% 0;animation:flow .12s ease-out both}
+@keyframes flow{from{transform:scaleY(0)}}
+.tools{display:flex;justify-content:center;gap:10px;margin-top:4px}
+.tool{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:16px;width:62px;padding:8px 0 6px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;position:relative;font-size:11px;font-weight:700;color:var(--muted2)}
+.tool svg{width:22px;height:22px;color:var(--ink)}
+.tool:disabled{opacity:.35;cursor:default}
+.tool b{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--ink);color:var(--on-ink);font:800 11px/20px system-ui;padding:0 5px}
+/* A ready bottle is poured onto the picture: its parts pulse until then. */
+.frame svg{cursor:pointer}
+.reg.want .base{animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{fill:#dfe3ec}}
+.flyer{position:fixed;z-index:15;pointer-events:none;margin:0;transform-origin:50% 0;transition:transform .38s ease-in-out}
+.flyer .liq{transition:height .5s ease-in}
+.pstream{position:fixed;width:7px;border-radius:4px;z-index:14;pointer-events:none;transform-origin:50% 0;animation:flow .12s ease-out both}
+
+/* Cards */
+.overlay{position:fixed;inset:0;background:rgba(10,12,18,.42);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.overlay.mid{align-items:center}
+.overlay.clear{background:none;pointer-events:none}
+.overlay.clear .sheet{pointer-events:auto}
+.sheet{background:var(--panel);border-radius:22px;padding:20px;width:min(100%,420px);box-shadow:var(--shadow);text-align:center;animation:up .3s cubic-bezier(.3,.7,.3,1)}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+.sheet h3{margin:0 0 6px;font:800 20px/1.2 "Inter",system-ui,sans-serif}
+.sheet p{margin:0 0 16px;color:var(--muted2)}
+.btn{appearance:none;border:0;border-radius:999px;background:var(--ink);color:var(--on-ink);font:700 15px "Inter",system-ui,sans-serif;padding:13px 22px;cursor:pointer;min-width:140px}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pchips{display:flex;gap:14px;justify-content:center;margin:4px 0 18px}
+.pchip{appearance:none;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;font-size:12px;font-weight:700}
+.pchip i{width:46px;height:46px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.pchip:disabled{opacity:.35}
+.stars{font-size:34px;letter-spacing:6px;margin:4px 0 8px}
+.stars .off{color:var(--line)}
+</style>
+</head>
+<body>
+<section id="home" class="scene">
+  <div class="content">
+    <div class="brand">ColorBottles</div>
+    <p class="sub" id="homeSub"></p>
+    <div class="grid" id="grid"></div>
+    <pre class="solve" id="solveOut" hidden></pre>
+  </div>
+</section>
+
+<section id="game" class="scene" hidden>
+  <div class="bar">
+    <button class="ib" id="back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 id="title"></h2>
+    <span class="pill" id="moves"></span>
+  </div>
+  <div class="content">
+    <div class="board" id="board">
+      <div class="top">
+        <div class="frame" id="pic"></div>
+        <div class="targets" id="targets"></div>
+      </div>
+      <div class="msg" id="msg"></div>
+      <div class="shelf" id="shelf"></div>
+      <div class="tools">
+        <button class="tool" id="tUndo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg><span></span></button>
+        <button class="tool" id="tExtract"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 7 6 11a6 6 0 01-12 0c0-4 3-7 6-11z"/><path d="M12 11v7M9 15l3 3 3-3"/></svg><span></span><b id="exN">0</b></button>
+        <button class="tool" id="tDrain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14l-1.5 14h-11z"/><path d="M3 6h18M9 6V4h6v2"/></svg><span></span></button>
+        <button class="tool" id="tHint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg><span></span></button>
+        <button class="tool" id="tRestart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span></span></button>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="overlay" id="ov" hidden><div class="sheet" id="sheet"></div></div>
+
+<script src="engine/core.js?v=1a99dd9"></script>
+<script src="engine/i18n.js?v=1a99dd9"></script>
+<script src="engine/sound.js?v=1a99dd9"></script>
+<script src="levels.js?v=1a99dd9"></script>
+<script src="solver.js?v=1a99dd9"></script>
+<script>
+(function(){
+const G=window.GAME, CAP=G.cap, L=G.levels, {t}=I18N, $=id=>document.getElementById(id);
+I18N.add(G.strings);
+I18N.add({
+fr:{'{name} is ready: pour it on the picture':'{name} est prêt : versez-le sur l’image','Tap another bottle to pour into it':'Touchez une autre bouteille pour verser dedans','Tap a part of the picture':'Touchez une partie de l’image','That part is already painted':'Cette partie est déjà peinte','This part needs {name}: mix a full bottle of it':'Il faut du {name} ici : remplissez-en une bouteille','This part needs {name}. Your bottle is {other}':'Il faut du {name} ici. Votre bouteille est {other}','Pour bottle {a} on the picture':'Versez la bouteille {a} sur l’image','Prototype · mix the colors, then paint the picture':'Prototype · mélangez les couleurs, puis peignez l’image','Moves':'Coups','Par':'Par','Undo':'Annuler','Extract':'Extraire','Drain':'Vider','Hint':'Indice','Restart':'Rejouer',
+'Select a bottle':'Choisissez une bouteille','Tap another bottle to pour, or a target color':'Touchez une autre bouteille pour verser, ou une couleur cible','That bottle is full':'Cette bouteille est pleine',
+'Fill the bottle to the top first':'Remplissez d’abord la bouteille jusqu’en haut','Not quite: {pct}% match':'Pas tout à fait : {pct} %','{name} is ready: tap it to deliver':'{name} est prêt : touchez-le pour livrer',
+'Extract which paint?':'Extraire quelle peinture ?','It goes into an empty bottle.':'Elle va dans une bouteille vide.','Needs an empty bottle.':'Il faut une bouteille vide.','Cancel':'Annuler',
+'All colors mixed!':'Toutes les couleurs sont prêtes !','Tap the picture to paint it':'Touchez l’image pour la peindre','Painted!':'Peint !','{m} moves · par {p}':'{m} coups · par {p}','Next':'Suivant','Home':'Accueil','Got it':'Compris',
+'No solution from here: try Undo':'Plus de solution d’ici : essayez Annuler','Pour {a} into {b}':'Versez {a} dans {b}','Empty bottle {a}':'Videz la bouteille {a}','Extract {paint} from bottle {a}':'Extrayez {paint} de la bouteille {a}','Deliver bottle {a}':'Livrez la bouteille {a}',
+'White':'Blanc','Cyan':'Cyan','Magenta':'Magenta','Yellow':'Jaune','Black':'Noir','Play':'Jouer'},
+ru:{'{name} is ready: pour it on the picture':'{name} готов: вылейте его на картинку','Tap another bottle to pour into it':'Нажмите другую бутылку, чтобы перелить','Tap a part of the picture':'Нажмите на часть картинки','That part is already painted':'Эта часть уже раскрашена','This part needs {name}: mix a full bottle of it':'Здесь нужен цвет «{name}»: наполните им бутылку','This part needs {name}. Your bottle is {other}':'Здесь нужен цвет «{name}». У вас в бутылке «{other}»','Pour bottle {a} on the picture':'Вылейте бутылку {a} на картинку','Prototype · mix the colors, then paint the picture':'Прототип · смешайте цвета и раскрасьте картинку','Moves':'Ходы','Par':'Норма','Undo':'Отменить','Extract':'Извлечь','Drain':'Вылить','Hint':'Подсказка','Restart':'Заново',
+'Select a bottle':'Выберите бутылку','Tap another bottle to pour, or a target color':'Нажмите другую бутылку, чтобы перелить, или целевой цвет','That bottle is full':'Эта бутылка полная',
+'Fill the bottle to the top first':'Сначала заполните бутылку доверху','Not quite: {pct}% match':'Почти: совпадение {pct}%','{name} is ready: tap it to deliver':'{name} готов: нажмите, чтобы сдать',
+'Extract which paint?':'Какую краску извлечь?','It goes into an empty bottle.':'Она перельётся в пустую бутылку.','Needs an empty bottle.':'Нужна пустая бутылка.','Cancel':'Отмена',
+'All colors mixed!':'Все цвета готовы!','Tap the picture to paint it':'Нажимайте на картинку, чтобы раскрасить','Painted!':'Готово!','{m} moves · par {p}':'Ходов: {m} · норма {p}','Next':'Дальше','Home':'Меню','Got it':'Понятно',
+'No solution from here: try Undo':'Отсюда решения нет: отмените ход','Pour {a} into {b}':'Перелейте {a} в {b}','Empty bottle {a}':'Вылейте бутылку {a}','Extract {paint} from bottle {a}':'Извлеките {paint} из бутылки {a}','Deliver bottle {a}':'Сдайте бутылку {a}',
+'White':'Белый','Cyan':'Голубой','Magenta':'Пурпурный','Yellow':'Жёлтый','Black':'Чёрный','Play':'Играть'}});
+const sfx=(n,a)=>{try{SFX.play(n,a);}catch(e){}};
+const buzz=p=>{try{if(localStorage.getItem('pontpixel-vibration')!=='off'&&navigator.vibrate)navigator.vibrate(p);}catch(e){}};
+const hexOf=r=>CF.hex(CF.mix(r));
+const PAPER=CF.BLANK, INKC=CF.INK;
+
+// ---------- Save ----------
+let save={best:{},tip:{}};
+try{Object.assign(save,JSON.parse(localStorage.getItem(G.saveKey)||'{}'));}catch(e){}
+const store=()=>{try{localStorage.setItem(G.saveKey,JSON.stringify(save));}catch(e){}};
+
+// ---------- Picture ----------
+function pictureSVG(lv,colored,uid){
+  let s=`<svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="240" fill="${PAPER}"/>`;
+  if(uid) s+='<defs>'+lv.regions.map((r,i)=>`<clipPath id="${uid}c${i}"><circle r="0" cx="160" cy="120"/></clipPath>`).join('')+'</defs>';
+  lv.regions.forEach((r,i)=>{
+    const col=hexOf(lv.targets[r.t].recipe), st=r.stroke;
+    const ol=st?`fill="none" stroke="${INKC}" stroke-width="${st+5}" stroke-linecap="round"`:`fill="${INKC}" stroke="${INKC}" stroke-width="5" stroke-linejoin="round"`;
+    const f=c=>st?`fill="none" stroke="${c}" stroke-width="${st}" stroke-linecap="round"`:`fill="${c}"`;
+    s+=`<g class="reg" data-r="${i}"><g ${ol}>${r.svg}</g><g class="base" ${f(colored?col:PAPER)}>${r.svg}</g>`+
+      (uid?`<g ${f(col)} clip-path="url(#${uid}c${i})">${r.svg}</g>`:'')+'</g>';
+  });
+  if(lv.decor) s+=`<g fill="none" stroke="${INKC}" stroke-width="3">${lv.decor}</g>`;
+  return s+'</svg>';
+}
+
+// ---------- Home ----------
+function stars(n){return [1,2,3].map(i=>i<=n?'★':'<span class="off">★</span>').join('');}
+function goHome(){
+  $('game').hidden=true; $('home').hidden=false; closeOv();
+  $('homeSub').textContent=t('Prototype · mix the colors, then paint the picture');
+  const next=L.findIndex(l=>!save.best[l.id]);
+  $('grid').innerHTML=L.map((l,i)=>`<button class="card${i===next?' next':''}" data-i="${i}">${pictureSVG(l,!!save.best[l.id])}<b><span>${i+1}. ${t(l.title)}</span><span class="st">${stars(save.best[l.id]||0)}</span></b></button>`).join('');
+  $('grid').querySelectorAll('.card').forEach(c=>c.onclick=()=>start(+c.dataset.i));
+}
+
+// ---------- Play ----------
+let S=null, busy=false;
+const snap=()=>({b:S.b.map(CB.clone),done:S.done.slice(),ex:S.ex,moves:S.moves});
+function start(i){
+  const lv=L[i];
+  S={i,lv,b:lv.bottles.map(CB.clone),done:lv.targets.map(()=>false),ex:lv.extract||0,moves:0,sel:-1,hist:[],phase:'mix'};
+  busy=false; closeOv();
+  $('home').hidden=true; $('game').hidden=false;
+  $('title').textContent=`${i+1}. ${t(lv.title)}`;
+  $('pic').innerHTML=pictureSVG(lv,false,'L'+i);
+  $('pic').querySelector('svg').addEventListener('pointerdown',tapPicture);
+  $('targets').innerHTML=lv.targets.map((tg,ti)=>`<button class="tgt" data-t="${ti}"><div class="chip" style="background:${hexOf(tg.recipe)}"><i><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i></div><span>${t(tg.name)}</span><em></em></button>`).join('');
+  $('targets').querySelectorAll('.tgt').forEach(b=>b.onclick=()=>tapTarget(+b.dataset.t));
+  $('targets').classList.toggle('many',lv.targets.length>2);
+  // Bottles taller when there are few of them; 7+ wrap into two rows.
+  const n=lv.bottles.length; $('shelf').style.setProperty('--tubeH',(n>6?120:168)+'px');
+  $('tExtract').hidden=!lv.extract;
+  $('shelf').innerHTML=S.b.map((b,bi)=>`<div class="slot"><button class="bottle" data-i="${bi}"><span class="ok"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div class="tube"><div class="liq"></div><div class="marks"></div></div><div class="comp"></div></button></div>`).join('');
+  $('shelf').querySelectorAll('.bottle').forEach(b=>b.onclick=()=>tapBottle(+b.dataset.i));
+  render(); msg(t('Select a bottle'));
+  if(lv.tip&&!save.tip[lv.id]) showTip();
+}
+const bEl=i=>$('shelf').querySelectorAll('.bottle')[i];
+function drawBottle(i){
+  const el=bEl(i), b=S.b[i], v=CB.vol(b), liq=el.querySelector('.liq');
+  liq.style.height=(v/CAP*100)+'%';
+  if(v>CB.EPS) liq.style.backgroundColor=CF.hex(CB.color(b));
+  el.querySelector('.comp').innerHTML=CB.parts(b).map(k=>`<i style="width:${b[k]/CAP*100}%;background:${CF.hex(CF.PMAP[k].rgb)}"></i>`).join('');
+  el.classList.toggle('fit',S.lv.targets.some((tg,ti)=>!S.done[ti]&&CB.fits(b,tg.recipe,CAP)));
+  el.classList.toggle('sel',S.sel===i);
+}
+function render(){
+  S.b.forEach((b,i)=>drawBottle(i));
+  const sb=S.sel>=0?S.b[S.sel]:null;
+  $('targets').querySelectorAll('.tgt').forEach((el,ti)=>{
+    const tg=S.lv.targets[ti];
+    el.classList.toggle('done',S.done[ti]);
+    el.classList.toggle('ready',!!sb&&!S.done[ti]&&CB.fits(sb,tg.recipe,CAP));
+    el.querySelector('em').textContent=sb&&!S.done[ti]?CB.matchOf(sb,tg.recipe)+'%':'';
+  });
+  $('moves').innerHTML=`${t('Moves')} ${S.moves} <small>· ${t('Par')} ${S.lv.par}</small>`;
+  const sel=S.sel>=0;
+  $('tUndo').disabled=!S.hist.length;
+  $('exN').textContent=S.ex; $('tExtract').disabled=!(sel&&S.ex>0&&CB.parts(S.b[S.sel]).length>1);
+  $('tDrain').disabled=!sel;
+  document.querySelectorAll('.bottle.hint').forEach(e=>e.classList.remove('hint'));
+  const ready=sb?S.lv.targets.findIndex((tg,k)=>!S.done[k]&&CB.fits(sb,tg.recipe,CAP)):-1;
+  S.lv.regions.forEach((r,ri)=>{
+    if(!S.done[r.t]) clipC(ri).setAttribute('r',0);
+    $('pic').querySelector(`.reg[data-r="${ri}"]`).classList.toggle('want',r.t===ready);
+  });
+}
+const clipC=ri=>$('pic').querySelector(`#L${S.i}c${ri} circle`);
+function msg(s){$('msg').textContent=s||'';}
+function select(i){
+  S.sel=i; render();
+  if(i<0){msg(t('Select a bottle'));return;}
+  const ti=S.lv.targets.findIndex((tg,k)=>!S.done[k]&&CB.fits(S.b[i],tg.recipe,CAP));
+  msg(ti>=0?t('{name} is ready: pour it on the picture',{name:t(S.lv.targets[ti].name)}):t('Tap another bottle to pour into it'));
+}
+function tapBottle(i){
+  if(busy||S.phase!=='mix') return;
+  if(S.sel<0){ if(CB.vol(S.b[i])>CB.EPS){select(i);sfx('drop','C');} return; }
+  if(S.sel===i){select(-1);return;}
+  const a=S.sel, r=CB.pour(S.b[a],S.b[i],CAP);
+  if(!r){ const el=bEl(i); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); sfx('wrong'); buzz(30);
+    if(CB.vol(S.b[i])>CB.EPS) select(i); else msg(t('That bottle is full')); return; }
+  S.hist.push(snap()); S.moves++; animatePour(a,i,r);
+}
+function animatePour(a,b,r){
+  busy=true; const shelf=$('shelf'), A=bEl(a), B=bEl(b), sa=A.parentNode, sb=B.parentNode;
+  const tubeH=B.querySelector('.tube').offsetHeight, TILT=115, reach=(tubeH+14)*Math.sin(TILT*Math.PI/180);
+  // A tips past horizontal (mouth below its base) toward B from its own side; if its body would swing off the shelf, it pours from B's other side.
+  const mouthX=sb.offsetLeft+sb.offsetWidth/2;
+  let dir=sb.offsetLeft>sa.offsetLeft?1:-1;
+  if(dir>0&&mouthX-reach<-8) dir=-1; else if(dir<0&&mouthX+reach>shelf.offsetWidth+8) dir=1;
+  // Mouth of A (top center, the transform origin) goes just above B's mouth, then A tilts.
+  const dx=(sb.offsetLeft-sa.offsetLeft)-dir*12, dy=(sb.offsetTop-sa.offsetTop)-22;
+  A.classList.remove('sel'); A.classList.add('pouring'); A.style.transform=`translate(${dx}px,${dy}px) rotate(${dir*TILT}deg)`;
+  const col=CF.hex(CB.color(S.b[a]));
+  setTimeout(()=>{
+    const st=document.createElement('div'); st.className='stream'; st.style.background=col;
+    const x=sb.offsetLeft+sb.offsetWidth/2-3-dir*6, y0=sb.offsetTop-16, surf=sb.offsetTop+tubeH*(1-CB.vol(r.b)/CAP);
+    Object.assign(st.style,{left:x+'px',top:y0+'px',height:Math.max(12,surf-y0)+'px'}); shelf.appendChild(st);
+    S.b[a]=r.a; S.b[b]=r.b; S.sel=-1; drawBottle(a); drawBottle(b); sfx('pour'); buzz(15);
+    setTimeout(()=>{ st.remove(); A.style.transform=''; setTimeout(()=>{A.classList.remove('pouring'); busy=false; afterMove(b);},330); },460);
+  },330);
+}
+function afterMove(focus){
+  render();
+  const ti=focus>=0?S.lv.targets.findIndex((tg,k)=>!S.done[k]&&CB.fits(S.b[focus],tg.recipe,CAP)):-1;
+  // A full bottle that matches an open target gets picked up, ready to pour on the picture.
+  if(ti>=0) select(focus); else msg(t('Select a bottle'));
+}
+function tapTarget(ti){
+  if(busy||S.done[ti]) return;
+  const ri=S.lv.regions.findIndex(r=>r.t===ti), bb=$('pic').querySelector(`.reg[data-r="${ri}"]`).getBoundingClientRect();
+  tryPaint(ti,bb.left+bb.width/2,bb.top+bb.height/2);
+}
+// Tap on the picture: find the part under the finger, pour the selected bottle on it if the color is right.
+function tapPicture(e){
+  if(busy) return;
+  const g=e.target.closest('.reg'); if(!g){msg(t('Tap a part of the picture'));return;}
+  const ti=S.lv.regions[+g.dataset.r].t;
+  if(S.done[ti]){msg(t('That part is already painted'));return;}
+  tryPaint(ti,e.clientX,e.clientY);
+}
+function tryPaint(ti,x,y){
+  const tg=S.lv.targets[ti];
+  if(S.sel<0){msg(t('This part needs {name}: mix a full bottle of it',{name:t(tg.name)}));return;}
+  const b=S.b[S.sel];
+  if(!CB.isFull(b,CAP)){msg(t('Fill the bottle to the top first'));sfx('wrong');return;}
+  if(!CB.fits(b,tg.recipe,CAP)){
+    const other=S.lv.targets.findIndex((o,k)=>!S.done[k]&&CB.fits(b,o.recipe,CAP));
+    msg(other>=0?t('This part needs {name}. Your bottle is {other}',{name:t(tg.name),other:t(S.lv.targets[other].name)})
+      :t('Not quite: {pct}% match',{pct:CB.matchOf(b,tg.recipe)}));
+    sfx('wrong');buzz(30);return;
+  }
+  pourOnPicture(S.sel,ti,x,y);
+}
+// The bottle flies over the picture (as a fixed copy, so the scroll area can't clip it), tips, and the paint
+// spreads over every part of that color from where it lands.
+function pourOnPicture(i,ti,x,y){
+  busy=true; S.hist.push(snap());
+  const A=bEl(i), ra=A.getBoundingClientRect(), col=CF.hex(CB.color(S.b[i]));
+  const f=A.cloneNode(true); f.classList.remove('sel','fit'); f.classList.add('flyer');
+  Object.assign(f.style,{left:ra.left+'px',top:(ra.top+(A.classList.contains('sel')?16:0))+'px',width:ra.width+'px'});
+  document.body.appendChild(f); A.style.visibility='hidden';
+  const tubeH=A.querySelector('.tube').offsetHeight, TILT=115, reach=(tubeH+14)*Math.sin(TILT*Math.PI/180);
+  const dir=x-reach<8?-1:1, mx=ra.left+ra.width/2, my=parseFloat(f.style.top);
+  const lift=Math.min(70,y-8), dx=x-mx-dir*4, dy=y-lift-my;
+  requestAnimationFrame(()=>f.style.transform=`translate(${dx}px,${dy}px) rotate(${dir*TILT}deg)`);
+  setTimeout(()=>{
+    const st=document.createElement('div'); st.className='pstream'; st.style.background=col;
+    Object.assign(st.style,{left:(x-3.5)+'px',top:(y-lift+4)+'px',height:(lift-4)+'px'}); document.body.appendChild(st);
+    f.querySelector('.liq').style.height='0%'; sfx('pour'); buzz(15);
+    // Paint spreads from the landing point over all parts of this color.
+    const svg=$('pic').querySelector('svg'), p=svg.createSVGPoint(); p.x=x; p.y=y; const q=p.matrixTransform(svg.getScreenCTM().inverse());
+    const cs=S.lv.regions.map((r,ri)=>r.t===ti?clipC(ri):null).filter(Boolean);
+    cs.forEach(c=>{c.setAttribute('cx',q.x);c.setAttribute('cy',q.y);});
+    S.lv.regions.forEach((r,ri)=>{if(r.t===ti) $('pic').querySelector(`.reg[data-r="${ri}"]`).classList.remove('want');});
+    const t0=performance.now(); (function grow(now){const k=Math.min(1,(now-t0)/700); cs.forEach(c=>c.setAttribute('r',(1-Math.pow(1-k,3))*420)); if(k<1) requestAnimationFrame(grow);})(t0);
+    setTimeout(()=>{
+      st.remove(); f.style.transform='';
+      setTimeout(()=>{
+        S.b[i]={}; S.done[ti]=true; S.sel=-1; cs.forEach(c=>c.setAttribute('r',420));
+        const lq=A.querySelector('.liq'); lq.style.transition='none'; render(); void lq.offsetWidth; lq.style.transition='';
+        f.remove(); A.style.visibility=''; busy=false;
+        sfx('restore',S.done.filter(Boolean).length-1); buzz([20,40,20]);
+        if(S.done.every(Boolean)) setTimeout(finish,350); else msg(t('Select a bottle'));
+      },380);
+    },560);
+  },380);
+}
+function drain(){
+  if(busy||S.sel<0) return;
+  const i=S.sel, A=bEl(i); S.hist.push(snap()); S.moves++; busy=true;
+  A.style.transform='translateY(10px) rotate(160deg)'; A.classList.add('pouring');
+  setTimeout(()=>{S.b[i]={}; S.sel=-1; drawBottle(i); sfx('pour');},250);
+  setTimeout(()=>{A.style.transform=''; setTimeout(()=>{A.classList.remove('pouring');busy=false;render();msg(t('Select a bottle'));},330);},650);
+}
+function openExtract(){
+  if(busy||S.sel<0||S.ex<1) return;
+  const i=S.sel, b=S.b[i], e=S.b.findIndex(x=>CB.vol(x)<CB.EPS);
+  const amt=v=>Math.round(v*10)/10;
+  openOv(`<h3>${t('Extract which paint?')}</h3><p>${e>=0?t('It goes into an empty bottle.'):t('Needs an empty bottle.')}</p>
+    <div class="pchips">${CB.parts(b).map(k=>`<button class="pchip" data-k="${k}"${e<0?' disabled':''}><i style="background:${CF.hex(CF.PMAP[k].rgb)}"></i>${t(CF.PMAP[k].name)} · ${amt(b[k])}</button>`).join('')}</div>
+    <div class="row"><button class="btn ghost" id="exCancel">${t('Cancel')}</button></div>`);
+  $('exCancel').onclick=closeOv;
+  $('sheet').querySelectorAll('.pchip').forEach(c=>c.onclick=()=>{
+    closeOv(); const k=c.dataset.k; S.hist.push(snap()); S.moves++; S.ex--;
+    const nb=CB.clone(b); S.b[e]={[k]:b[k]}; delete nb[k]; S.b[i]=nb; S.sel=-1;
+    [i,e].forEach(x=>{const el=bEl(x); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');});
+    sfx('undo'); buzz(20); afterMove(e);
+  });
+}
+function undo(){
+  if(busy||!S.hist.length) return;
+  const h=S.hist.pop(); S.b=h.b; S.done=h.done; S.ex=h.ex; S.moves=h.moves; S.sel=-1; render(); msg(t('Select a bottle')); sfx('undo');
+}
+function hint(){
+  if(busy) return;
+  const open=S.lv.targets.map((tg,ti)=>ti).filter(ti=>!S.done[ti]);
+  const r=CB.solve({bottles:S.b,targets:open.map(ti=>S.lv.targets[ti]),extract:S.ex},CAP,150000);
+  if(r.moves<0||!r.path.length){msg(t('No solution from here: try Undo'));sfx('wrong');return;}
+  const m=r.path[0]; select(-1); const n=x=>x+1;
+  if(m[0]==='pour'){bEl(m[1]).classList.add('hint');bEl(m[2]).classList.add('hint');msg(t('Pour {a} into {b}',{a:n(m[1]),b:n(m[2])}));}
+  else if(m[0]==='drain'){bEl(m[1]).classList.add('hint');msg(t('Empty bottle {a}',{a:n(m[1])}));}
+  else if(m[0]==='extract'){bEl(m[1]).classList.add('hint');msg(t('Extract {paint} from bottle {a}',{paint:t(CF.PMAP[m[2]].name),a:n(m[1])}));}
+  else {bEl(m[1]).classList.add('hint');msg(t('Pour bottle {a} on the picture',{a:n(m[1])}));}
+}
+
+function finish(){
+  const par=S.lv.par, st=S.moves<=par?3:S.moves<=par+2?2:1;
+  S.phase='done'; msg(''); save.best[S.lv.id]=Math.max(save.best[S.lv.id]||0,st); store(); sfx('fanfare');
+  const last=S.i>=L.length-1;
+  openOv(`<h3>${t('Painted!')}</h3><div class="stars">${stars(st)}</div><p>${t('{m} moves · par {p}',{m:S.moves,p:par})}</p>
+    <div class="row"><button class="btn ghost" id="rHome">${t('Home')}</button>${last?'':`<button class="btn" id="rNext">${t('Next')}</button>`}</div>`);
+  $('ov').classList.add('clear');
+  $('rHome').onclick=goHome; if(!last) $('rNext').onclick=()=>start(S.i+1);
+}
+
+// ---------- Cards ----------
+function openOv(html,mid){$('sheet').innerHTML=html; $('ov').classList.toggle('mid',!!mid); $('ov').classList.remove('clear'); $('ov').hidden=false;}
+function closeOv(){$('ov').hidden=true;}
+$('ov').addEventListener('click',e=>{if(e.target===$('ov')&&S&&S.phase==='mix') closeOv();});
+function showTip(){
+  const tp=S.lv.tip;
+  openOv(`<h3>${t(tp.title)}</h3><p>${t(tp.text)}</p><button class="btn" id="tipOk">${t('Got it')}</button>`,true);
+  $('tipOk').onclick=()=>{save.tip[S.lv.id]=1; store(); closeOv();};
+}
+
+$('back').onclick=goHome;
+$('tUndo').onclick=undo; $('tExtract').onclick=openExtract; $('tDrain').onclick=drain; $('tHint').onclick=hint; $('tRestart').onclick=()=>start(S.i);
+[['tUndo','Undo'],['tExtract','Extract'],['tDrain','Drain'],['tHint','Hint'],['tRestart','Restart']].forEach(([id,s])=>$(id).querySelector('span').textContent=t(s));
+goHome();
+
+// Dev: index.html?solve checks every level and prints par + a shortest solution.
+if(/[?&]solve/.test(location.search)){
+  const out=$('solveOut'); out.hidden=false;
+  out.textContent=L.map((l,i)=>{const r=CB.solve(l,CAP,2000000); return `${i+1}. ${l.id}: ${r.moves<0?'NO SOLUTION'+(r.capped?' (capped)':''):'par '+r.moves} (set ${l.par}), ${r.states} states\n   `+(r.path||[]).map(m=>m.join(' ')).join(' · ');}).join('\n');
+}
+})();
+</script>
+</body>
+</html>
